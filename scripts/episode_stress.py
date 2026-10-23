@@ -67,11 +67,19 @@ def main():
     core, p, sc, st, cfg = build_inputs()
     for label, recentre in PATH_SETS:
         hsc, starts = path_set(recentre, core)
+        res = engine.run(st, hsc, cfg)
         print(f"{label}: {len(starts)} paths, {starts[0].date()} to {starts[-1].date()}")
         for name, bad in EPISODES:
             start = episode_start(bad)
-            status = "available" if start in starts else "NOT AVAILABLE"
-            print(f"  {name}: start {start.date()} ({status})")
+            if start not in starts:
+                print(f"  {name}: start {start.date()} NOT AVAILABLE")
+                continue
+            i = starts.index(start)
+            print(f"  {name}: start {start.date()}, first bad month {bad.date()}, "
+                  f"January 2033 facility ${res['facility'][i]:,.0f}")
+        worst = int(np.argmin(res["facility"]))
+        print(f"  worst path: start {starts[worst].date()}, January 2033 facility "
+              f"${res['facility'][worst]:,.0f}")
 
 
 if __name__ == "__main__":
