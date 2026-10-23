@@ -154,8 +154,7 @@ dominates.
 - The four named episodes are above the simulated median as it happened; after recentring, 2008 is
   essentially at the median ($196,935.1 vs $196,989.2) and the other three are above. A named crisis
   is not, by itself, a facility tail.
-- The worst facility is the October 2008 start, not because of the equity crash but because rates fell
-  after that start: the path's 5-year zero rate is already 3.65% at the January 2027 lock (4.95% on the
+- The worst facility is the October 2008 start, not because of the equity crash but because the lock is struck at low rates: the path's 5-year zero rate is already 3.65% at the January 2027 lock (4.95% on the
   median simulated path), so the first deposit locks only 84.95% of the ladder's present value (99.95%
   on the median), and the rate is 3.03% at the January 2031 top-up. A fall in rates after a well-funded
   lock is not enough on its own: the 2008 crisis path's rate falls from 4.85% to 2.29% with 98.78%
