@@ -103,23 +103,24 @@ def growth_value(s: State, sc: Scenarios, m: int) -> np.ndarray:
 
 
 def _finite_path(name: str, value, shape: tuple[int | None, ...], *,
-                 min_axes: tuple[int, ...] = ()) -> np.ndarray:
+                 min_axes: tuple[int, ...] = (), shape_text: str | None = None) -> np.ndarray:
+    text = str(shape) if shape_text is None else shape_text
     try:
         raw = np.asarray(value)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}") from exc
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}") from exc
     if raw.dtype.kind not in "iuf":
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}")
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}")
     try:
         arr = np.asarray(value, dtype=float)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}") from exc
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}") from exc
     valid_shape = arr.ndim == len(shape) and all(
         expected is None or (actual >= expected if i in min_axes else actual == expected)
         for i, (actual, expected) in enumerate(zip(arr.shape, shape))
     )
     if not valid_shape or not np.isfinite(arr).all():
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}")
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}")
     return arr
 
 
@@ -370,9 +371,7 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
     n = sc.n
     if isinstance(n, bool) or not isinstance(n, Integral) or n <= 0:
         raise ValueError("scenarios must contain a positive integer number of paths")
-    eq_log = _finite_path("eq_log", sc.eq_log, (int(n), None, None))
-    if eq_log.ndim != 3:
-        raise ValueError(f"scenarios.eq_log must have shape (n, months, equities), got {eq_log.shape}")
+    eq_log = _finite_path("eq_log", sc.eq_log, (int(n), None, None), shape_text="(n, months, assets)")
     if eq_log.shape[1] < horizon or eq_log.shape[2] == 0:
         raise ValueError(f"scenarios.eq_log must cover {horizon} months and at least one equity")
     K = eq_log.shape[2]

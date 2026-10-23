@@ -98,6 +98,13 @@ def test_engine_rejects_nonfinite_equity_log_returns():
         engine.run(IPS, sc)
 
 
+def test_engine_2d_eq_log_names_the_expected_3d_shape():
+    sc = _valid_scenario()
+    sc.eq_log = sc.eq_log[:, :, 0]
+    with pytest.raises(ValueError, match=r"shape \(n, months, assets\)"):
+        engine.run(IPS, sc)
+
+
 def test_engine_rejects_boolean_scenario_paths():
     sc = _valid_scenario()
     sc.eq_log = sc.eq_log.astype(object)
