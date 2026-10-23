@@ -52,3 +52,20 @@ checks. Read `docs/MODEL.md` before you change anything.
     (20,000 scenarios x 75 months x 14 assets x 8 bytes is 168 MB per array). Keep peak memory under
     about 2 GB per script: process grids and inner simulations in chunks, keep summary statistics
     rather than full paths, and free large arrays you no longer need.
+12. **Never run a command in the planner's main checkout**
+    (`/Users/whinz/WhartonComp/WGHS-InvestmentChallenge-GraniteBay-2026`). Do not `cd` there and do
+    not pass it to `git -C`. You may read files there. Run everything from your own worktree. A
+    worker once ran `git checkout <rev> -- .` there and rolled back the day's merged work.
+13. **Blocked git commands.** The bridge blocks `stash`, `checkout`, `switch`, `reset`, `clean`, `push`,
+    `rebase`, `worktree`, `branch -d/-D/-f`, `restore --source` and `rm -rf`. You do not need them. To
+    look at an older version, copy it out:
+    `mkdir /tmp/<name> && git archive <rev> | tar -x -C /tmp/<name>`. To undo changes to reports, use
+    `git restore reports/`.
+14. **Count with commands, not by eye.** Any count in your report (scripts run, tests added, commits,
+    files changed) comes from a command (`wc -l`, `grep -c`, `git log --oneline | wc -l`). Paste the
+    command next to the count.
+15. **Claims need numbers.** Do not write a sentence saying why something happens unless your brief
+    asks for it and a number printed by a script backs it. If two of your numbers disagree with a
+    sentence, the sentence is wrong.
+16. **Write the report body to a file and pass `--body-file`.** In a double-quoted `--body` the shell
+    deletes every `$` and backtick, so `$5,790` arrives as `,790`.
