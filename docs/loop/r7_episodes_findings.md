@@ -50,10 +50,11 @@ are −19.6%; all payments are funded. Re-centred, the facility is $196,935.1, t
 $167,394.8, the floor is $110,550.7, the real facility is $204,895.5, six-year equity is +34.2%, and
 the worst 12 months are −21.1%. The facility is above the simulated median as it happened and
 essentially at the median after recentring, even though the worst 12 months are worse than the
-simulated median's −18.0%. The lock is affordable because it is struck before the crash: the first
-deposit locks a larger share of the payments, so the January 2031 top-up takes less from the growth
-sleeve. The as-it-happened facility is high because the six-year window includes the post-crash
-recovery; recentring removes the unusually strong US mean and brings the facility back to the median.
+simulated median's −18.0%. The lock is affordable because it is struck before the crash. The first
+deposit locks 98.8% of the ladder's present value (vs a 99.9% median across paths), so the January 2031
+top-up takes more from the growth sleeve than on the median path. The as-it-happened facility is high
+because the six-year window includes the post-crash recovery; recentring removes the unusually strong
+US mean and brings the facility back to the median.
 
 ## 2011 euro crisis
 
@@ -131,6 +132,18 @@ loss is real, but the rate rise lowers the cost of the January 2028 lock and the
 and the TWD depreciation raises the real facility; the net facility is higher. The splice is a
 counterfactual, not a historical six-year path: it replaces only the first 12 months' shocks and
 keeps the simulated post-2022 months, so it should not be read as a fifth episode.
+
+## 2022 splice decomposition
+
+To isolate the drivers of the facility gain, the script also tests splicing each component separately.
+Splicing only the 2022 equity moves gives a median facility of $191,198.9 (−$5,790.3 vs the unspliced
+median), only the rate moves gives $213,523.3 (+$16,534.1), and only the FX moves gives $196,989.2
+(+$0.0). The rate-only splice reproduces nearly the full facility gain, while the equity-only splice
+reduces the facility and the FX-only splice has no effect on the nominal facility (it only affects the
+real facility through TWD depreciation). The ladder is about 99.95% locked in January 2027, so the
+2022 rise in rates after that makes the January 2031 floor and the bond sleeve cheaper rather than
+hurting the reserve. The equity loss is real, but the liability-side gain from cheaper floor purchases
+dominates.
 
 ## What the table says
 
