@@ -39,7 +39,7 @@ payment is funded. For the simulated rows, the equity columns are the median (or
 the per-path six-year cumulative return and the per-path worst 12-month return. The worst path is the
 lowest January 2033 facility among the 184 historical starts in each path set, not the lowest equity
 return. The 2022 full path is unavailable because the last start with 74 months of history is
-2020-07-31; the table does not substitute another date.
+2020-07-31; the table does not substitute another date. `zero5_jan2027` and `zero5_jan2031` in the CSV are each path's 5-year zero rate at the two lock dates.
 
 ## 2008 financial crisis
 
@@ -155,8 +155,8 @@ dominates.
   essentially at the median ($196,935.1 vs $196,989.2) and the other three are above. A named crisis
   is not, by itself, a facility tail.
 - The worst facility is the October 2008 start, not because of the equity crash but because rates fell
-  after that start: the path's 5-year yield drops from 4.07% at January 2027 (model month 3) to 3.17%
-  at January 2031 (month 51), making the January 2031 floor and the bond sleeve dearer. Its six-year
+  after that start: the path's 5-year zero rate goes from 3.65% in January 2027 to 3.03% in January 2031,
+  making the January 2031 floor and the bond sleeve dearer. Its six-year
   equity return is the highest in the table, and its worst 12 months are the mildest: facility and
   equity drawdown rank differently.
 - The 2022 splice nominal gain is a rate effect: rate-only adds +$16,534.1 of the +$10,408.6 total,

@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 
 from lgm import engine
+from lgm import nelson_siegel
 from lgm.backtest import history_paths
 from lgm.esg import simulate
 from lgm.growth.core import build_core
@@ -43,6 +44,7 @@ FIELDS = (
     "path_set", "episode", "start", "first_bad_month", "available", "n_paths",
     "facility_jan2033", "contribution_85", "floor_2033", "funded_share",
     "facility_real_tw2027", "equity_cum_6y", "equity_worst_12m", "locked_share_2027",
+    "zero5_jan2027", "zero5_jan2031",
     "note",
 )
 
@@ -131,6 +133,8 @@ def path_metrics(res, stats, i, sc=None, cfg=None):
     if sc is not None and cfg is not None:
         ls = locked_share_2027(res, sc, cfg)
         m["locked_share_2027"] = float(ls[i])
+        z5 = nelson_siegel.zero(sc.beta[i, [engine.M_2027, engine.M_2031]], np.array([5.0]))[:, 0]
+        m["zero5_jan2027"], m["zero5_jan2031"] = float(z5[0]), float(z5[1])
     return m
 
 
@@ -148,6 +152,10 @@ def distribution_metrics(res, stats, q, sc=None, cfg=None):
     if sc is not None and cfg is not None:
         ls = locked_share_2027(res, sc, cfg)
         m["locked_share_2027"] = float(np.percentile(ls, q))
+        z5_2027 = nelson_siegel.zero(sc.beta[:, engine.M_2027, :], np.array([5.0]))
+        z5_2031 = nelson_siegel.zero(sc.beta[:, engine.M_2031, :], np.array([5.0]))
+        m["zero5_jan2027"] = float(np.percentile(z5_2027, q))
+        m["zero5_jan2031"] = float(np.percentile(z5_2031, q))
     return m
 
 
@@ -185,6 +193,8 @@ def write_csv(rows):
                 "equity_cum_6y": f"{r['equity_cum_6y']:.6f}" if "equity_cum_6y" in r else "",
                 "equity_worst_12m": f"{r['equity_worst_12m']:.6f}" if "equity_worst_12m" in r else "",
                 "locked_share_2027": f"{r['locked_share_2027']:.4f}" if "locked_share_2027" in r else "",
+                "zero5_jan2027": f"{r['zero5_jan2027']:.4f}" if "zero5_jan2027" in r else "",
+                "zero5_jan2031": f"{r['zero5_jan2031']:.4f}" if "zero5_jan2031" in r else "",
                 "note": r["note"],
             })
     print(f"wrote {CSV}")
