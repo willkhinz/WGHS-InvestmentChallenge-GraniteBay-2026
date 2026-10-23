@@ -127,11 +127,12 @@ construction. The inflation and Taiwan-cost paths are unchanged.
 The spliced median facility is $207,397.8, the contribution is $176,288.2, the floor is $125,846.0,
 the real facility is $194,263.7, six-year core equity is +14.7%, and the worst 12 months are −18.3%;
 all payments are funded. This is the one row where the facility is above the unspliced simulated
-median ($196,989.2) while six-year equity is far below the unspliced median (+44.2%). The 2022 equity
-loss is real, but the rate rise lowers the cost of the January 2028 lock and the January 2031 floor,
-and the TWD depreciation raises the real facility; the net facility is higher. The splice is a
-counterfactual, not a historical six-year path: it replaces only the first 12 months' shocks and
-keeps the simulated post-2022 months, so it should not be read as a fifth episode.
+median ($196,989.2) while six-year equity is far below the unspliced median (+44.2%). The nominal
+gain is a rate effect: rate-only adds +$16,534.1, partly offset by equity-only −$5,790.3; FX-only
+adds +$0.0 to the nominal facility but moves the real facility to $184,699.3 (vs the unspliced
+median $166,547.4). The splice is a counterfactual, not a historical six-year path: it replaces only
+the first 12 months' shocks and keeps the simulated post-2022 months, so it should not be read as a
+fifth episode.
 
 ## 2022 splice decomposition
 
@@ -153,12 +154,15 @@ dominates.
 - The four named episodes are above the simulated median as it happened; after recentring, 2008 is
   essentially at the median ($196,935.1 vs $196,989.2) and the other three are above. A named crisis
   is not, by itself, a facility tail.
-- The worst facility is the October 2008 start, not because of the equity crash but because the lock
-  is struck at low rates. Its six-year equity return is the highest in the table, and its worst 12
-  months are the mildest: facility and equity drawdown rank differently.
-- The 2022 splice is a rate/FX story: the equity loss is real, but the liability-side gain dominates
-  and the TWD depreciation lifts the real value. It is the clearest reminder that the facility is a
-  liability-side metric, not a return metric.
+- The worst facility is the October 2008 start, not because of the equity crash but because rates fell
+  after that start: the path's 5-year yield drops from 4.07% at January 2027 (model month 3) to 3.17%
+  at January 2031 (month 51), making the January 2031 floor and the bond sleeve dearer. Its six-year
+  equity return is the highest in the table, and its worst 12 months are the mildest: facility and
+  equity drawdown rank differently.
+- The 2022 splice nominal gain is a rate effect: rate-only adds +$16,534.1 of the +$10,408.6 total,
+  partly offset by equity-only −$5,790.3; FX-only adds +$0.0 to the nominal facility but moves the
+  real facility to $184,699.3 (vs the unspliced median $166,547.4). It is the clearest reminder that
+  the facility is a liability-side metric, not a return metric.
 - The episodes are four single historical paths, not a probability distribution; the re-centred set
   is a counterfactual with the BL mean returns; the 2022 splice is a 12-month stress, not a full
   path; and the strategy is held fixed throughout. The table is a set of named stresses, not a
