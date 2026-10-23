@@ -42,6 +42,7 @@ ORDER = [  # (script, passes --refresh, failure is fatal)
     ("fx_hedge_frontier", False, True),
     ("strips_reserve", False, True),        # a reserve outside WInS (STRIPS at mid and ask)
     ("policy_robust", False, True),         # IPS under 11 shifts (the top policies come from the last policy_search)
+    ("episode_stress", False, True),        # named crises after the lock (docs/VALIDATION.md section 7)
     ("doc_numbers", False, True),           # last: every quoted figure against its report
 ]
 

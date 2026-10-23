@@ -154,6 +154,15 @@ Run `python scripts/validate_model.py` (reports `validation_esg.csv`, `validatio
   curve. With returns re-centred on our expectations, the IPS median is $195.6k against $197.0k
   simulated; its 5th percentile is $154.8k against $146.1k simulated, so the simulation is the more
   cautious. All-stock funds every payment in 89.1% of real paths against 86.7% simulated.
+- **Named crises just after the lock:** 2008, 2011, 2015-16 and COVID, each started so that its
+  first bad month falls just after the January 2027 lock, fund every payment
+  (`scripts/episode_stress.py`). As it happened, their facilities are $207.9k, $216.5k,
+  $240.1k and $213.9k, all above the simulated median. The worst of the 184 paths, from
+  October 2008, gives $136.2k against the simulated 5th percentile of $146.1k: rates had
+  already fallen by the lock (5-year zero rate 3.65% against 4.95% on the median path), so
+  the first deposit locks only 85.0% of the ladder. Splicing 2022's first twelve months into the
+  simulation lifts the median facility to $207.4k: the rate rise alone adds $16.5k and the stock
+  fall alone costs $5.8k (`reports/episode_stress.csv`).
 - **Expected rate path:** forecasting the curve 74 months ahead from 320 month-ends (1994-2020), the
   error in the cost of ten payments is 7.7% for "unchanged", 7.5% for forwards minus the Kim-Wright term
   premium and 10.0% for pure forwards. "Unchanged" stays: it ties on accuracy and has the least bias.

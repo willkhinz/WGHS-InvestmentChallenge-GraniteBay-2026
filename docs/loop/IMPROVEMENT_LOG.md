@@ -471,3 +471,7 @@ factors are reported as invalid input data.
   ladder. Splicing the 2022 sell-off into the first year raises the median facility to $207.4k (rates
   alone +$16.5k, equities alone -$5.8k, USD/TWD alone $0). Details in docs/loop/r7_episodes_findings.md;
   not yet in MODEL.md.
+
+- Named crises in the main docs (r8): the episode results are now a bullet in docs/VALIDATION.md
+  section 7, generated and checked by doc_numbers.py from reports/episode_stress.csv (128 figures);
+  scripts/episode_stress.py joins run_all.
