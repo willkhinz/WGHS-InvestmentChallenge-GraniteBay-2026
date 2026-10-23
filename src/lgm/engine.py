@@ -11,6 +11,7 @@ Everything is vectorised over scenarios.
 """
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from numbers import Integral, Real
@@ -388,15 +389,15 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
         raise ValueError(f"cfg.eq_er must be a finite vector in [0, 12) with shape ({K},)")
     cfg.eq_er = tuple(eq_er)
     deposits = _validate_engine_config(cfg, K)
-    _finite_path("beta", sc.beta, (int(n), horizon + 1, 3), min_axes=(1,))
-    _finite_path("infl", sc.infl, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("fx_log", sc.fx_log, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("tw_cost_log", sc.tw_cost_log, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("resid", sc.resid, (len(TAU_GRID),))
+    beta = _finite_path("beta", sc.beta, (int(n), horizon + 1, 3), min_axes=(1,))
+    infl = _finite_path("infl", sc.infl, (int(n), horizon + 1), min_axes=(1,))
+    fx_log = _finite_path("fx_log", sc.fx_log, (int(n), horizon + 1), min_axes=(1,))
+    tw_cost_log = _finite_path("tw_cost_log", sc.tw_cost_log, (int(n), horizon + 1), min_axes=(1,))
+    resid = _finite_path("resid", sc.resid, (len(TAU_GRID),))
     if m0 <= M_2027:
         i27 = M_2027 - int(m0)
-        fx_2027 = sc.fx_log[:, i27]
-        tw_cost_2027 = sc.tw_cost_log[:, i27]
+        fx_2027 = fx_log[:, i27]
+        tw_cost_2027 = tw_cost_log[:, i27]
     else:
         fx_base = getattr(sc, "fx_log_2027", None)
         tw_cost_base = getattr(sc, "tw_cost_log_2027", None)
@@ -412,6 +413,14 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
         raise ValueError("scenarios.rate_floor must be a finite scalar") from exc
     if not np.isfinite(rate_floor):
         raise ValueError("scenarios.rate_floor must be a finite scalar")
+    # `_finite_path` accepts array-likes, but the simulation indexes the scenario attributes
+    # directly: keep the validated float arrays on a shallow copy if they differ from the caller's.
+    validated = {"beta": beta, "eq_log": eq_log, "infl": infl, "fx_log": fx_log,
+                 "tw_cost_log": tw_cost_log, "resid": resid}
+    if any(getattr(sc, name, None) is not value for name, value in validated.items()):
+        sc = copy.copy(sc)
+        for name, value in validated.items():
+            setattr(sc, name, value)
     s = state if state is not None else State(
         np.zeros((n, K)), np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n),
         np.zeros((n, N_PAY)), np.zeros(n),
@@ -502,7 +511,7 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
     funded = assets >= open_cost - 1e-6
     facility = np.maximum(assets - open_cost, 0.0)
     i33 = M_2033 - sc.m0
-    real = facility * np.exp(sc.fx_log[:, i33] - fx_2027) / np.exp(sc.tw_cost_log[:, i33] - tw_cost_2027)
+    real = facility * np.exp(fx_log[:, i33] - fx_2027) / np.exp(tw_cost_log[:, i33] - tw_cost_2027)
     out.update({"funded": funded, "facility": facility, "contribution": facility * st.contribution_share,
                 "facility_real_tw2027": real, "assets_2033": assets, "open_cost_2033": open_cost,
                 "shortfall": np.maximum(open_cost - assets, 0.0), "locked_2033": s.locked.mean(1),

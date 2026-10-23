@@ -105,6 +105,14 @@ def test_engine_run_leaves_the_caller_config_unchanged():
     assert all(type(x) is float for x in cfg.eq_er)
 
 
+@pytest.mark.parametrize("field", ["fx_log", "tw_cost_log", "eq_log"])
+def test_engine_run_uses_validated_scenario_paths(field):
+    sc = _full_scenario()
+    baseline = engine.run(IPS, sc)["facility"]
+    setattr(sc, field, getattr(sc, field).tolist())
+    assert np.allclose(engine.run(IPS, sc)["facility"], baseline)
+
+
 @pytest.mark.parametrize("field", ["beta", "infl", "fx_log", "tw_cost_log"])
 def test_engine_rejects_short_scenario_state_paths(field):
     sc = _valid_scenario()
