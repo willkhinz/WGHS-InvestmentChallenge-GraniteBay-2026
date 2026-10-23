@@ -670,10 +670,10 @@ def conditional_2031_band(st: Strategy, sc: Scenarios, res: dict, params, q: flo
     if k > n:
         raise ValueError(f"k must be no greater than the number of scenarios ({n})")
     try:
-        raw_percentiles = tuple(percentiles)
+        pct = tuple(percentiles)
     except TypeError as exc:
         raise ValueError("percentiles must be a nonempty sequence of unique values in [0, 100]") from exc
-    pcs = tuple(finite_real("percentiles", pc) for pc in raw_percentiles)
+    pcs = tuple(finite_real("percentiles", pc) for pc in pct)
     if not pcs or any(not 0.0 <= pc <= 100.0 for pc in pcs) or len(set(pcs)) != len(pcs):
         raise ValueError("percentiles must be a nonempty sequence of unique values in [0, 100]")
     order = np.argsort(rank_on)
@@ -684,7 +684,7 @@ def conditional_2031_band(st: Strategy, sc: Scenarios, res: dict, params, q: flo
     out = {"scenarios": picks, "floor": float(np.median(floors)),
            "floor_range": (float(floors.min()), float(floors.max())),
            "growth_2031": float(np.median([c["growth_2031"] for c in rows]))}
-    for pc in percentiles:
+    for pc in pcs:
         out[f"p{pc:g}"] = float(np.median([np.percentile(c["inner"], pc) for c in rows]))
     out["median"] = out.get("p50", float(np.median([c["median"] for c in rows])))
     return out

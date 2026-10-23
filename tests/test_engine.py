@@ -37,6 +37,14 @@ def test_2031_floor_and_range(setup):
     assert c["p10"] == pytest.approx(181_400, rel=0.06) and c["p90"] == pytest.approx(208_600, rel=0.06)
 
 
+def test_band_materialises_generator_percentiles_once(setup):
+    p, sc = setup
+    r = engine.run(S9, sc, snapshot_2031=True)
+    percentiles = (pc for pc in (5, 50, 95))
+    out = engine.conditional_2031_band(S9, sc, r, p, k=3, n_inner=50, percentiles=percentiles)
+    assert {"p5", "p50", "p95"} <= set(out)
+
+
 def test_ips_contribution_rule(setup):
     _, sc = setup
     r = engine.run(IPS, sc)
