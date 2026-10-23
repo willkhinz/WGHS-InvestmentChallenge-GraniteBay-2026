@@ -12,7 +12,7 @@ Everything is vectorised over scenarios.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from numbers import Integral, Real
 
 import numpy as np
@@ -248,7 +248,7 @@ def _engine_config(cfg: EngineConfig | None) -> EngineConfig:
         return EngineConfig()
     if not isinstance(cfg, EngineConfig):
         raise ValueError("cfg must be an engine.EngineConfig instance or None")
-    return cfg
+    return replace(cfg)
 
 
 def _funds(w: np.ndarray, cfg: EngineConfig) -> list[np.ndarray]:

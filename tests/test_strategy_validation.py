@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from lgm import engine
+from lgm.esg import Scenarios
 from lgm.strategies import IPS, Strategy
 
 
@@ -81,6 +82,27 @@ def _valid_scenario():
         resid=np.zeros(len(engine.TAU_GRID)),
         rate_floor=-0.005,
     )
+
+
+def _full_scenario(n=2, k=3):
+    months = engine.M_2033 + 1
+    return Scenarios(
+        beta=np.zeros((n, months, 3)),
+        eq_log=np.zeros((n, engine.M_2033, k)),
+        infl=np.zeros((n, months)),
+        fx_log=np.zeros((n, months)),
+        tw_cost_log=np.zeros((n, months)),
+        resid=np.zeros(len(engine.TAU_GRID)),
+    )
+
+
+def test_engine_run_leaves_the_caller_config_unchanged():
+    eq_er = [0.0003, 0.0003, 0.0006]
+    cfg = engine.EngineConfig(eq_er=eq_er)
+    engine.run(IPS, _full_scenario(), cfg)
+    assert cfg.eq_er is eq_er
+    assert isinstance(cfg.eq_er, list)
+    assert all(type(x) is float for x in cfg.eq_er)
 
 
 @pytest.mark.parametrize("field", ["beta", "infl", "fx_log", "tw_cost_log"])
