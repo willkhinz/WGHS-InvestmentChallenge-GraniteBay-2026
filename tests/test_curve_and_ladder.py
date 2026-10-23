@@ -60,6 +60,12 @@ def test_future_premium_skips_expired_candidates(zc):
         L.premium(future_curve, instruments=[TermFund("OLD", dt.date(2030, 12, 15))])
 
 
+def test_premium_rejects_first_payment_at_settlement(zc):
+    at_first_payment = ZeroCurve(dt.date(2033, 1, 1), zc.knots, zc.log_df)
+    with pytest.raises(ValueError, match="first payment"):
+        L.premium(at_first_payment)
+
+
 def test_official_curves_match_documents():
     oct16 = par_curve("2026-10-16")
     for t, y in {5: 4.89, 7: 4.98, 10: 5.09, 20: 5.47}.items():
