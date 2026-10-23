@@ -110,8 +110,8 @@ def _mixing(dof: float, rng: np.random.Generator, shape: tuple) -> np.ndarray:
 def _dof(value, name: str, *, allow_gaussian: bool = False) -> float | None:
     """Normalize a tail option; None inherits the legacy block behavior."""
     expected = (
-        "a Student-t dof > 2, positive infinity, or 'gaussian'"
-        if allow_gaussian else "a Student-t dof > 2 or positive infinity"
+        "a number > 2, float('inf'), 'gaussian', or None"
+        if allow_gaussian else "a number > 2, float('inf'), or None"
     )
     if value is None:
         return None
@@ -203,37 +203,39 @@ def _tw_cost_ar_coefficients(value):
     return phi1, phi2
 
 
-def _state_values(value, name: str) -> np.ndarray:
+def _state_values(value, name: str, label: str | None = None) -> np.ndarray:
     """Convert continuation state to finite numeric values, rejecting boolean pseudo-numbers."""
+    loc = label if label is not None else f"start[{name!r}]"
     try:
         raw = np.asarray(value, dtype=object)
         if any(isinstance(x, (bool, np.bool_)) for x in raw.flat):
             raise ValueError("boolean values are not valid state data")
         state = np.asarray(raw, dtype=float)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"start[{name!r}] must contain finite numeric values") from exc
+        raise ValueError(f"{loc} must contain finite numeric values") from exc
     if not np.isfinite(state).all():
-        raise ValueError(f"start[{name!r}] must contain finite numeric values")
+        raise ValueError(f"{loc} must contain finite numeric values")
     return state
 
 
-def _path_state(value, n: int, name: str) -> np.ndarray:
+def _path_state(value, n: int, name: str, label: str | None = None) -> np.ndarray:
     """Normalize a shared scalar or one finite value per scenario."""
-    state = _state_values(value, name)
+    state = _state_values(value, name, label)
     if state.ndim == 0:
         return np.full(n, float(state))
+    loc = label if label is not None else f"start[{name!r}]"
     if state.shape != (n,):
-        raise ValueError(f"start[{name!r}] must be a scalar or have shape ({n},), got {state.shape}")
+        raise ValueError(f"{loc} must be a scalar or have shape ({n},), got {state.shape}")
     return state
 
 
-def _tw_cost_state(value, n: int, name: str):
+def _tw_cost_state(value, n: int, name: str, label: str | None = None):
     """Normalize one lag state or the (two-lag) AR(2) state."""
     if value is None:
         return None
     if isinstance(value, (tuple, list)) and len(value) == 2:
-        return tuple(_path_state(item, n, name) for item in value)
-    return _path_state(value, n, name)
+        return tuple(_path_state(item, n, name, label) for item in value)
+    return _path_state(value, n, name, label)
 
 
 def _parameter_values(value, shape: tuple, name: str) -> np.ndarray:
@@ -434,7 +436,7 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
     if tw_cost_ar is not None and start is None:
         raw_cost_state = p.tw_cost_state0 if p.tw_cost_state0 is not None else p.tw_cost_infl0
         name = "tw_cost_state0" if p.tw_cost_state0 is not None else "tw_cost_infl0"
-        tw_cost_initial_state = _tw_cost_state(raw_cost_state, n, name)
+        tw_cost_initial_state = _tw_cost_state(raw_cost_state, n, name, label=name)
     if garch is not None and start is not None and "garch_h" in start:
         try:
             start_h = _state_values(start["garch_h"], "garch_h")
@@ -487,7 +489,7 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
         else:
             garch_h[:, 0] = h0
 
-        var0 = p.cov[factor_idx, factor_idx] * (eq_vol_scale ** 2)
+        var0 = shock_cov[factor_idx, factor_idx] * (eq_vol_scale ** 2)
         for m in range(M):
             shocks[:, m, :K] *= np.sqrt(garch_h[:, m, None])
             if m < M - 1:
@@ -596,12 +598,12 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
             # mixing one after the other would dilute the first correlation; the two need a joint factor
             raise ValueError("tw_cost_corr and tw_cost_fx_corr cannot both be set")
         if rho_cpi:
-            cpi_std = np.sqrt(p.cov[K + 3, K + 3])
+            cpi_std = np.sqrt(shock_cov[K + 3, K + 3])
             z_cpi = shocks[..., K + 3] / (cpi_std if cpi_std > 0 else 1.0)
             z_tw = rho_cpi * z_cpi + np.sqrt(1.0 - rho_cpi**2) * z_tw
 
         if rho_fx:
-            z_fx = shocks[..., K + 4] / np.sqrt(p.cov[K + 4, K + 4])
+            z_fx = shocks[..., K + 4] / np.sqrt(shock_cov[K + 4, K + 4])
             z_tw = rho_fx * z_fx + np.sqrt(1.0 - rho_fx ** 2) * z_tw
 
         y = np.empty((n, M))
