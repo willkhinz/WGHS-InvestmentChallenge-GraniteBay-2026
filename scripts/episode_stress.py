@@ -63,6 +63,27 @@ def path_set(recentre: bool, core):
     return history_paths([g.history for g in CORE], recentre=target)
 
 
+def splice_2022(sc):
+    """Replace model months 3-14 with the actual Jan-Dec 2022 equity, rate and FX moves."""
+    seg, starts = history_paths([g.history for g in CORE], start=SPLICE_START, end=SPLICE_END,
+                                months=15)
+    if len(starts) != 1 or starts[0] != SPLICE_START:
+        raise ValueError(f"2022 splice needs one path at {SPLICE_START.date()}, got {starts}")
+    if starts[0] + pd.offsets.MonthEnd(START_OFFSET_MONTHS) != pd.Timestamp("2022-01-31"):
+        raise ValueError("2022 splice does not start four months before January 2022")
+    eq = sc.eq_log.copy()
+    eq[:, 3:15, :] = seg.eq_log[0, 3:15, :]
+    beta = sc.beta.copy()
+    for m in range(3, 15):
+        beta[:, m + 1] = beta[:, m] + (seg.beta[0, m + 1] - seg.beta[0, m])
+    beta[:, 15:] = sc.beta[:, 15:] + (beta[:, 15] - sc.beta[:, 15])[:, None, :]
+    fx = sc.fx_log.copy()
+    for m in range(3, 15):
+        fx[:, m + 1] = fx[:, m] + (seg.fx_log[0, m + 1] - seg.fx_log[0, m])
+    fx[:, 15:] = sc.fx_log[:, 15:] + (fx[:, 15] - sc.fx_log[:, 15])[:, None]
+    return dc.replace(sc, eq_log=eq, beta=beta, fx_log=fx), seg
+
+
 def weighted_log_eq(sc, w):
     """Core-weighted log equity return in each month of the six-year investment window."""
     return (sc.eq_log[:, engine.M_2027:engine.M_2033, :] * w).sum(2)
@@ -143,6 +164,16 @@ def main():
         rows.append(row(label, "Worst path", start=starts[worst].date().isoformat(),
                         **path_metrics(res, stats, worst),
                         note="lowest January 2033 facility among the 184 paths"))
+    rows.append(row("History paths", "2022 stock-and-bond sell-off", first_bad_month="2022-01-31",
+                    available=0, n_paths=0,
+                    note="no full six-year path: the last available start is 2020-07-31"))
+    spliced, _ = splice_2022(sc)
+    spliced_res = engine.run(st, spliced, cfg)
+    spliced_stats = equity_stats(weighted_log_eq(spliced, w))
+    rows.append(row("Simulated with 2022 spliced", "2022 sell-off, median", n_paths=N_SIM,
+                    **distribution_metrics(spliced_res, spliced_stats, 50),
+                    note="months 3-14 replaced with the actual Jan-Dec 2022 equity, rate and FX "
+                         "moves; other simulated months unchanged"))
 
     print(f"{'Path set':<45} {'Episode':<33} {'Start':<10} {'Facility':>10} {'Contrib':>10} "
           f"{'Floor':>10} {'Funded':>7} {'Real':>10} {'Equity':>8} {'Worst12':>8}")
