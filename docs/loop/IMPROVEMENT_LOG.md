@@ -429,3 +429,7 @@ Treasury par/zero curves now validate tenor, knot, and discount-vector shapes an
 non-finite maturities fail directly; `ZeroCurve.zero()` no longer turns a past date into a plausible
 short rate. Bootstrap horizons must include at least one semiannual point, and nonpositive discount
 factors are reported as invalid input data.
+- **Commit note:** `2dabbb3` ("Test the volatility-window forecast helper ...") also contains the
+  input validation Codex had left uncommitted in `src/lgm/engine.py`, `src/lgm/strategies.py` and
+  `tests/test_strategy_validation.py` (swept in by `git commit -a`). The code is tested; only the message
+  undersells it. It was already pushed, so the history is left as is rather than rewritten.
