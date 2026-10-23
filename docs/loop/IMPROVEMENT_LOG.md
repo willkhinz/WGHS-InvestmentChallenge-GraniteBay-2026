@@ -454,3 +454,20 @@ factors are reported as invalid input data.
   curve date is on or after the first payment (it returned NaN). Left as designed: a STRIP or fund
   on its maturity date has no cash flow, so a price of 0 is consistent. Independently verified
   (r7-verify-ladder).
+
+- Engine validation review (r7-review-engine): four findings fixed in engine.py, each with a test that
+  fails before the fix: conditional_2031_band reads a generator of percentiles once; a 2-D eq_log gets a
+  clear shape message; run() no longer changes the caller's EngineConfig; the arrays validated by
+  _finite_path are the ones used. Headline unchanged to the dollar; one engine.run about 2% slower.
+  Independently verified (r7-verify-engine).
+- ESG validation review (r7-review-esg): three fixes in esg.py. A list-of-lists covariance now works with
+  GARCH and the Taiwan cost correlation; tw_cost_state0 errors name the parameter; the _dof message lists
+  the accepted values. ESG output is bit-identical before and after under the headline, GARCH and
+  cost-correlation settings (docs/loop/r7_esg_bitcheck.py). Independently verified (r7-verify-esg2).
+- Named historical episodes (r7-episodes, scripts/episode_stress.py): 2008, 2011, 2015-16 and COVID
+  placed just after the January 2027 lock all fund every payment. The worst historical start (October
+  2008) gives a facility of $136.2k against the simulated 5th percentile of $146.1k: its 5-year zero rate
+  is already 3.65% at the lock (4.95% on the median path), so the first deposit locks 84.95% of the
+  ladder. Splicing the 2022 sell-off into the first year raises the median facility to $207.4k (rates
+  alone +$16.5k, equities alone -$5.8k, USD/TWD alone $0). Details in docs/loop/r7_episodes_findings.md;
+  not yet in MODEL.md.
