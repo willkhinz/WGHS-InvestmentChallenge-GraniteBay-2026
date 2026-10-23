@@ -293,3 +293,17 @@ def test_rate_shared_must_be_a_finite_fraction(base_params, value):
     p = dc.replace(base_params, months=1, rate_shared=value)
     with pytest.raises(ValueError, match="rate_shared"):
         esg.simulate(p, n=2, seed=1)
+
+
+def test_dof_string_inf_error_message(base_params):
+    """Regression: _dof message says exactly what is accepted (float('inf'), 'gaussian', or None)."""
+    p = dc.replace(base_params, months=1, rate_dof="inf")
+    with pytest.raises(ValueError, match=r"rate_dof must be a number > 2, float\('inf'\), 'gaussian', or None, got 'inf'"):
+        esg.simulate(p, n=2, seed=1)
+
+
+def test_dof_string_inf_contrast_gaussian_accepted(base_params):
+    """'gaussian' string is accepted for allow_gaussian fields."""
+    p = dc.replace(base_params, months=1, rate_dof="gaussian")
+    # Should not raise
+    esg.simulate(p, n=2, seed=1)

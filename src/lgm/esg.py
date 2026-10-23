@@ -110,8 +110,8 @@ def _mixing(dof: float, rng: np.random.Generator, shape: tuple) -> np.ndarray:
 def _dof(value, name: str, *, allow_gaussian: bool = False) -> float | None:
     """Normalize a tail option; None inherits the legacy block behavior."""
     expected = (
-        "a Student-t dof > 2, positive infinity, or 'gaussian'"
-        if allow_gaussian else "a Student-t dof > 2 or positive infinity"
+        "a number > 2, float('inf'), 'gaussian', or None"
+        if allow_gaussian else "a number > 2, float('inf'), or None"
     )
     if value is None:
         return None
