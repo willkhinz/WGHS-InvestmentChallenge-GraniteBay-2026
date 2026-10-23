@@ -52,10 +52,11 @@ def finding_3_fund_settle_vs_curve_date() -> None:
     zc = _curve()
     fund = TermFund("IBTO", CURVE, ytm=0.04)
     settle = CURVE - dt.timedelta(days=30)
-    flows = fund.cashflows(settle, zc)
+    flows, price, _, _ = L._flows(fund, zc, settle)
     print(
         "finding_3_fund_settle_vs_curve_date: "
-        f"expected [] (termination {fund.termination} <= curve date {zc.date}), actual={flows}"
+        f"expected [] (termination {fund.termination} <= curve date {zc.date}), actual={flows}; "
+        f"build_matrix price={price:.6f}"
     )
 
 
@@ -67,10 +68,17 @@ def finding_4_premium_at_first_payment() -> None:
     active = [inst for inst in L.wins_reserve_universe() if L._flows(inst, later, later.date)[0]]
     lp = L.solve(active, pays, later, 0.03)
     premium = L.premium(later, 0.03)
+    try:
+        L.premium(ZeroCurve(later.date.replace(year=2034), zc.knots, zc.log_df), 0.03)
+    except ValueError as exc:
+        next_year = f"ValueError({str(exc)!r})"
+    else:
+        next_year = "accepted"
     print(
         "finding_4_premium_at_first_payment: "
         f"expected ValueError (first payment {pays[0][0]} is due at settlement), "
-        f"actual premium={premium!r} (LP infeasible={not math.isfinite(lp.cost)}, cost={lp.cost!r})"
+        f"actual premium={premium!r} (LP infeasible={not math.isfinite(lp.cost)}, cost={lp.cost!r}); "
+        f"n={len(pays)}, last={pays[-1][0]}; at 2034 {next_year}"
     )
 
 
