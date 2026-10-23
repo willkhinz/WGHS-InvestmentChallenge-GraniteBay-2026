@@ -105,10 +105,14 @@ class TreasuryStrip:
         return 0.0
 
     def curve_price(self, curve: ZeroCurve) -> float:
+        if self.maturity <= curve.date:
+            return 0.0
         t = year_frac(curve.date, self.maturity)
         return float(100.0 * curve.df(t))
 
     def dirty_price(self, curve: ZeroCurve) -> float:
+        if self.maturity <= curve.date:
+            return 0.0
         return float(self.price) if self.price is not None else self.curve_price(curve)
 
     def clean_price(self, curve: ZeroCurve) -> float:
@@ -119,11 +123,21 @@ class TreasuryStrip:
         settle = as_date(settle)
         t = year_frac(settle, self.maturity)
         if t <= 0:
-            return 0.0
+            raise ValueError("yield is undefined for a matured Treasury STRIP")
+        if isinstance(dirty, (bool, np.bool_)):
+            raise ValueError("dirty price must be a finite positive real number")
+        try:
+            dirty = float(dirty)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("dirty price must be a finite positive real number") from exc
+        if not np.isfinite(dirty) or dirty <= 0.0:
+            raise ValueError("dirty price must be a finite positive real number")
         return 2.0 * ((100.0 / dirty) ** (1.0 / (2.0 * t)) - 1.0)
 
     def mod_duration(self, curve: ZeroCurve) -> float:
         p0 = self.curve_price(curve)
+        if p0 <= 0.0:
+            raise ValueError("duration is undefined for a matured Treasury STRIP")
         up = self.curve_price(curve.shifted(1))
         dn = self.curve_price(curve.shifted(-1))
         return (dn - up) / (2.0 * p0 * 1e-4)

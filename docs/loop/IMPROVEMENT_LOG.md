@@ -419,10 +419,11 @@ The cash-flow ladder solver now normalizes one-shot payment iterables, requires 
 payments and a reinvestment rate above -100%, and rejects duplicate instrument labels and unknown
 constraints. A fixed amount now remains fixed when a compatible minimum is also provided; contradictory
 fixed/minimum bounds fail explicitly. Annual schedules from leap day roll to February 28 in non-leap years.
-Matured bonds and term funds now expose no future cash flows, and explicit ladder matrices reject expired
-instruments. The premium helper filters expired candidates from future-date universes. The study also
-drops its Jan 2033 fit: the first payment is due at settlement, and its previous fit incorrectly credited
-the already-matured IBTM toward that payment.
+Matured Treasury bonds, STRIPS, and term funds now expose no future cash flows or stale prices, and their
+yield/duration calculations fail clearly. Explicit ladder matrices reject expired instruments. The
+premium helper filters expired candidates from future-date universes. The study also drops its Jan 2033
+fit: the first payment is due at settlement, and its previous fit incorrectly credited the already-matured
+IBTM toward that payment.
 
 Treasury par/zero curves now validate tenor, knot, and discount-vector shapes and values. Negative or
 non-finite maturities fail directly; `ZeroCurve.zero()` no longer turns a past date into a plausible

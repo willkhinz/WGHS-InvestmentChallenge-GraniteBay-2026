@@ -41,6 +41,20 @@ def test_treasury_strip_flows_and_pricing():
     assert s_curve.dirty_price(dummy_curve) == pytest.approx(100.0 * dummy_curve.df(t), abs=1e-6)
 
 
+def test_matured_strip_does_not_use_stale_quote_or_past_curve_price():
+    settle = dt.date(2026, 10, 20)
+    curve = ZeroCurve(settle, np.array([1.0, 10.0]), np.array([-0.05, -0.50]))
+    strip = TreasuryStrip("expired", dt.date(2025, 11, 15), price=99.0)
+    assert strip.cashflows(settle) == []
+    assert strip.dirty_price(curve) == strip.clean_price(curve) == strip.curve_price(curve) == 0.0
+    with pytest.raises(ValueError, match="yield is undefined for a matured"):
+        strip.ytm(99.0, settle)
+    with pytest.raises(ValueError, match="duration is undefined for a matured"):
+        strip.mod_duration(curve)
+    with pytest.raises(ValueError, match="dirty price must be a finite positive"):
+        strip.ytm(0.0, dt.date(2024, 1, 1))
+
+
 def test_lp_synthetic_curve_exact_analytical_match():
     """On a flat 4% curve where each zero-coupon bond matures exactly on the payment date,
     the LP solution at 0% reinvestment must analytically buy exactly the payment face amount
