@@ -487,7 +487,7 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
         else:
             garch_h[:, 0] = h0
 
-        var0 = p.cov[factor_idx, factor_idx] * (eq_vol_scale ** 2)
+        var0 = shock_cov[factor_idx, factor_idx] * (eq_vol_scale ** 2)
         for m in range(M):
             shocks[:, m, :K] *= np.sqrt(garch_h[:, m, None])
             if m < M - 1:
@@ -596,12 +596,12 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
             # mixing one after the other would dilute the first correlation; the two need a joint factor
             raise ValueError("tw_cost_corr and tw_cost_fx_corr cannot both be set")
         if rho_cpi:
-            cpi_std = np.sqrt(p.cov[K + 3, K + 3])
+            cpi_std = np.sqrt(shock_cov[K + 3, K + 3])
             z_cpi = shocks[..., K + 3] / (cpi_std if cpi_std > 0 else 1.0)
             z_tw = rho_cpi * z_cpi + np.sqrt(1.0 - rho_cpi**2) * z_tw
 
         if rho_fx:
-            z_fx = shocks[..., K + 4] / np.sqrt(p.cov[K + 4, K + 4])
+            z_fx = shocks[..., K + 4] / np.sqrt(shock_cov[K + 4, K + 4])
             z_tw = rho_fx * z_fx + np.sqrt(1.0 - rho_fx ** 2) * z_tw
 
         y = np.empty((n, M))
