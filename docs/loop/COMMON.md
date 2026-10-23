@@ -18,7 +18,7 @@ checks. Read `docs/MODEL.md` before you change anything.
   `PYTHONPATH=<your worktree>/src PY scripts/<script>.py`
 - All data is cached in `data/raw/`; tests run offline. Do not re-download cached data unless your brief
   says so.
-- The whole pipeline (`scripts/run_all.py`) takes about 30 s. One `engine.run` on 20,000 scenarios takes
+- The whole pipeline (`scripts/run_all.py`) takes about 100 s. One `engine.run` on 20,000 scenarios takes
   well under a second. Measure before you launch any grid search, and multiply out the cost.
 
 ## Discipline
