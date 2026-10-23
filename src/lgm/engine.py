@@ -11,8 +11,9 @@ Everything is vectorised over scenarios.
 """
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from numbers import Integral, Real
 
 import numpy as np
@@ -103,23 +104,24 @@ def growth_value(s: State, sc: Scenarios, m: int) -> np.ndarray:
 
 
 def _finite_path(name: str, value, shape: tuple[int | None, ...], *,
-                 min_axes: tuple[int, ...] = ()) -> np.ndarray:
+                 min_axes: tuple[int, ...] = (), shape_text: str | None = None) -> np.ndarray:
+    text = str(shape) if shape_text is None else shape_text
     try:
         raw = np.asarray(value)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}") from exc
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}") from exc
     if raw.dtype.kind not in "iuf":
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}")
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}")
     try:
         arr = np.asarray(value, dtype=float)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}") from exc
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}") from exc
     valid_shape = arr.ndim == len(shape) and all(
         expected is None or (actual >= expected if i in min_axes else actual == expected)
         for i, (actual, expected) in enumerate(zip(arr.shape, shape))
     )
     if not valid_shape or not np.isfinite(arr).all():
-        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {shape}")
+        raise ValueError(f"scenarios.{name} must be a finite numeric array with shape {text}")
     return arr
 
 
@@ -247,7 +249,7 @@ def _engine_config(cfg: EngineConfig | None) -> EngineConfig:
         return EngineConfig()
     if not isinstance(cfg, EngineConfig):
         raise ValueError("cfg must be an engine.EngineConfig instance or None")
-    return cfg
+    return replace(cfg)
 
 
 def _funds(w: np.ndarray, cfg: EngineConfig) -> list[np.ndarray]:
@@ -370,9 +372,7 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
     n = sc.n
     if isinstance(n, bool) or not isinstance(n, Integral) or n <= 0:
         raise ValueError("scenarios must contain a positive integer number of paths")
-    eq_log = _finite_path("eq_log", sc.eq_log, (int(n), None, None))
-    if eq_log.ndim != 3:
-        raise ValueError(f"scenarios.eq_log must have shape (n, months, equities), got {eq_log.shape}")
+    eq_log = _finite_path("eq_log", sc.eq_log, (int(n), None, None), shape_text="(n, months, assets)")
     if eq_log.shape[1] < horizon or eq_log.shape[2] == 0:
         raise ValueError(f"scenarios.eq_log must cover {horizon} months and at least one equity")
     K = eq_log.shape[2]
@@ -389,15 +389,15 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
         raise ValueError(f"cfg.eq_er must be a finite vector in [0, 12) with shape ({K},)")
     cfg.eq_er = tuple(eq_er)
     deposits = _validate_engine_config(cfg, K)
-    _finite_path("beta", sc.beta, (int(n), horizon + 1, 3), min_axes=(1,))
-    _finite_path("infl", sc.infl, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("fx_log", sc.fx_log, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("tw_cost_log", sc.tw_cost_log, (int(n), horizon + 1), min_axes=(1,))
-    _finite_path("resid", sc.resid, (len(TAU_GRID),))
+    beta = _finite_path("beta", sc.beta, (int(n), horizon + 1, 3), min_axes=(1,))
+    infl = _finite_path("infl", sc.infl, (int(n), horizon + 1), min_axes=(1,))
+    fx_log = _finite_path("fx_log", sc.fx_log, (int(n), horizon + 1), min_axes=(1,))
+    tw_cost_log = _finite_path("tw_cost_log", sc.tw_cost_log, (int(n), horizon + 1), min_axes=(1,))
+    resid = _finite_path("resid", sc.resid, (len(TAU_GRID),))
     if m0 <= M_2027:
         i27 = M_2027 - int(m0)
-        fx_2027 = sc.fx_log[:, i27]
-        tw_cost_2027 = sc.tw_cost_log[:, i27]
+        fx_2027 = fx_log[:, i27]
+        tw_cost_2027 = tw_cost_log[:, i27]
     else:
         fx_base = getattr(sc, "fx_log_2027", None)
         tw_cost_base = getattr(sc, "tw_cost_log_2027", None)
@@ -413,6 +413,14 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
         raise ValueError("scenarios.rate_floor must be a finite scalar") from exc
     if not np.isfinite(rate_floor):
         raise ValueError("scenarios.rate_floor must be a finite scalar")
+    # `_finite_path` accepts array-likes, but the simulation indexes the scenario attributes
+    # directly: keep the validated float arrays on a shallow copy if they differ from the caller's.
+    validated = {"beta": beta, "eq_log": eq_log, "infl": infl, "fx_log": fx_log,
+                 "tw_cost_log": tw_cost_log, "resid": resid}
+    if any(getattr(sc, name, None) is not value for name, value in validated.items()):
+        sc = copy.copy(sc)
+        for name, value in validated.items():
+            setattr(sc, name, value)
     s = state if state is not None else State(
         np.zeros((n, K)), np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n),
         np.zeros((n, N_PAY)), np.zeros(n),
@@ -503,7 +511,7 @@ def run(st: Strategy, sc: Scenarios, cfg: EngineConfig | None = None, state: Sta
     funded = assets >= open_cost - 1e-6
     facility = np.maximum(assets - open_cost, 0.0)
     i33 = M_2033 - sc.m0
-    real = facility * np.exp(sc.fx_log[:, i33] - fx_2027) / np.exp(sc.tw_cost_log[:, i33] - tw_cost_2027)
+    real = facility * np.exp(fx_log[:, i33] - fx_2027) / np.exp(tw_cost_log[:, i33] - tw_cost_2027)
     out.update({"funded": funded, "facility": facility, "contribution": facility * st.contribution_share,
                 "facility_real_tw2027": real, "assets_2033": assets, "open_cost_2033": open_cost,
                 "shortfall": np.maximum(open_cost - assets, 0.0), "locked_2033": s.locked.mean(1),
@@ -670,10 +678,10 @@ def conditional_2031_band(st: Strategy, sc: Scenarios, res: dict, params, q: flo
     if k > n:
         raise ValueError(f"k must be no greater than the number of scenarios ({n})")
     try:
-        raw_percentiles = tuple(percentiles)
+        pct = tuple(percentiles)
     except TypeError as exc:
         raise ValueError("percentiles must be a nonempty sequence of unique values in [0, 100]") from exc
-    pcs = tuple(finite_real("percentiles", pc) for pc in raw_percentiles)
+    pcs = tuple(finite_real("percentiles", pc) for pc in pct)
     if not pcs or any(not 0.0 <= pc <= 100.0 for pc in pcs) or len(set(pcs)) != len(pcs):
         raise ValueError("percentiles must be a nonempty sequence of unique values in [0, 100]")
     order = np.argsort(rank_on)
@@ -684,7 +692,7 @@ def conditional_2031_band(st: Strategy, sc: Scenarios, res: dict, params, q: flo
     out = {"scenarios": picks, "floor": float(np.median(floors)),
            "floor_range": (float(floors.min()), float(floors.max())),
            "growth_2031": float(np.median([c["growth_2031"] for c in rows]))}
-    for pc in percentiles:
+    for pc in pcs:
         out[f"p{pc:g}"] = float(np.median([np.percentile(c["inner"], pc) for c in rows]))
     out["median"] = out.get("p50", float(np.median([c["median"] for c in rows])))
     return out
