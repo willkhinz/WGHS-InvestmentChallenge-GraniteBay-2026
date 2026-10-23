@@ -155,8 +155,11 @@ dominates.
   essentially at the median ($196,935.1 vs $196,989.2) and the other three are above. A named crisis
   is not, by itself, a facility tail.
 - The worst facility is the October 2008 start, not because of the equity crash but because rates fell
-  after that start: the path's 5-year zero rate goes from 3.65% in January 2027 to 3.03% in January 2031,
-  making the January 2031 floor and the bond sleeve dearer. Its six-year
+  after that start: the path's 5-year zero rate is already 3.65% at the January 2027 lock (4.95% on the
+  median simulated path), so the first deposit locks only 84.95% of the ladder's present value (99.95%
+  on the median), and the rate is 3.03% at the January 2031 top-up. A fall in rates after a well-funded
+  lock is not enough on its own: the 2008 crisis path's rate falls from 4.85% to 2.29% with 98.78%
+  locked, and its facility is above the median. Its six-year
   equity return is the highest in the table, and its worst 12 months are the mildest: facility and
   equity drawdown rank differently.
 - The 2022 splice nominal gain is a rate effect: rate-only adds +$16,534.1 of the +$10,408.6 total,
