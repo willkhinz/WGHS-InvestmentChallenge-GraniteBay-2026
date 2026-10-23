@@ -1,0 +1,5 @@
+funds,horizon_m,active_risk_bias,tracking_error,tracking_error_corrected,market_vol_bias,volatility,volatility_corrected
+7,36,-0.1015,0.013,0.014389,0.0032,0.1518,0.151315
+7,72,-0.1899,0.013,0.015719,-0.0042,0.1518,0.152439
+9,36,-0.1083,0.013,0.014487,0.0112,0.1518,0.150109
+9,72,-0.1897,0.013,0.015716,0.0068,0.1518,0.150771
