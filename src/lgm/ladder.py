@@ -244,6 +244,8 @@ def premium(curve: ZeroCurve, reinvest: float = 0.03, instruments=None) -> float
     """Cost of the cheapest real-instrument ladder over the payments' zero-coupon value. This is the
     engine's `kappa0`; it grows as the assumed reinvestment rate for cash awaiting a payment falls."""
     pays = payment_schedule()
+    if pays[0][0] <= curve.date:
+        raise ValueError("first payment must be strictly after the curve date")
     universe = tuple(instruments) if instruments is not None else ()
     if not universe:
         universe = tuple(wins_reserve_universe())

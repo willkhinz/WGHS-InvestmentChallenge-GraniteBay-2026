@@ -159,7 +159,8 @@ class TermFund:
         return (1 + y - self.expense_ratio) ** t
 
     def cashflows(self, settle: dt.date | str, curve: ZeroCurve) -> list[tuple[dt.date, float]]:
-        if self.termination <= as_date(settle):
+        cutoff = max(as_date(settle), curve.date)
+        if self.termination <= cutoff:
             return []
         return [(self.termination, self.growth_factor(curve))]
 
