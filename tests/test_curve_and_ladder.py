@@ -45,6 +45,12 @@ def test_matured_term_fund_is_not_treated_as_future_cashflow(zc):
         L.build_matrix([fund], L.payment_schedule(), zc, 0.03)
 
 
+def test_term_fund_with_settle_before_curve_date_still_has_no_flow_at_termination(zc):
+    fund = TermFund("AT-CURVE", zc.date)
+    settle = zc.date - dt.timedelta(days=30)
+    assert fund.cashflows(settle, zc) == []
+
+
 def test_future_premium_skips_expired_candidates(zc):
     future_curve = ZeroCurve(dt.date(2031, 1, 1), zc.knots, zc.log_df)
     candidates = [TermFund("OLD", dt.date(2030, 12, 15)), *L.wins_reserve_universe()]
