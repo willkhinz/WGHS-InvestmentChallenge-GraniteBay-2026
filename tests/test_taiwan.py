@@ -76,3 +76,16 @@ def test_taiwan_sub_indices():
     # Both sub-indices use base year 2021 = 100
     assert np.isclose(mat.loc["2021-01-31":"2021-12-31"].mean(), 100.00, atol=1e-3)
     assert np.isclose(srv.loc["2021-01-31":"2021-12-31"].mean(), 100.00, atol=1e-3)
+
+
+def test_taiwan_costs_proposal_does_not_overwrite_live_config():
+    """The r1 calibration writes a proposal; it must not replace config/taiwan.yaml."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "scripts" / "taiwan_costs.py"
+    spec = importlib.util.spec_from_file_location("_taiwan_costs_under_test", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.CONFIG_PATH == mod.ROOT / "config" / "taiwan_costs_proposal.yaml"
+    assert mod.CONFIG_PATH != mod.ROOT / "config" / "taiwan.yaml"

@@ -309,3 +309,19 @@ def test_variance_ratio_separates_iid_from_mean_reversion():
     assert variance_ratio(ma, 36) == pytest.approx(1 - 0.8 * 35 / 36, abs=0.03)
     t = variance_ratio_test(ma[:600], 36, n_null=2000)
     assert t["p_mean_reversion"] < 0.05 and t["null_median"] < 1
+
+
+def test_variant_study_config_template_matches_live_config():
+    """scripts/taiwan_variants.py rewrites config/taiwan.yaml; the template must stay idempotent.
+
+    The template lost `usd_twd_innovation_corr` when that field was added to the live config, so
+    re-running the study left esg_params() with a KeyError.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "scripts" / "taiwan_variants.py"
+    spec = importlib.util.spec_from_file_location("_taiwan_variants_under_test", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.CONFIG_YAML == (mod.ROOT / "config" / "taiwan.yaml").read_text()
