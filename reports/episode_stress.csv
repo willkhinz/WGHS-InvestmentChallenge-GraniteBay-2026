@@ -1,0 +1,15 @@
+path_set,episode,start,first_bad_month,available,n_paths,facility_jan2033,contribution_85,floor_2033,funded_share,facility_real_tw2027,equity_cum_6y,equity_worst_12m,note
+"Simulated (20,000, seed 11)",Median,,,1,20000,196989.2,167440.8,117578.8,1.000,166547.4,0.441560,-0.180318,
+"Simulated (20,000, seed 11)",5th percentile,,,1,20000,146101.9,124186.6,88273.7,1.000,110678.1,-0.226067,-0.323094,
+History as it happened,2008 financial crisis,2008-05-31,2008-09-30,1,1,207882.5,176700.1,115308.0,1.000,216285.3,0.509939,-0.195866,
+History as it happened,2011 euro crisis,2011-04-30,2011-08-31,1,1,216473.0,184002.0,129383.2,1.000,230814.6,0.638868,-0.124049,
+History as it happened,2015-16 China and oil sell-off,2015-04-30,2015-08-31,1,1,240088.3,204075.1,137051.5,1.000,180048.5,0.872937,-0.140979,
+History as it happened,COVID,2019-10-31,2020-02-29,1,1,213890.7,181807.1,123523.8,1.000,177362.1,0.836755,-0.197244,
+History as it happened,Worst path,2008-10-31,2009-02-28,1,1,136195.1,115765.8,77833.0,1.000,123083.2,1.208506,-0.106528,lowest January 2033 facility among the 184 paths
+History re-centred on BL expected returns,2008 financial crisis,2008-05-31,2008-09-30,1,1,196935.1,167394.8,110550.7,1.000,204895.5,0.342393,-0.211475,
+History re-centred on BL expected returns,2011 euro crisis,2011-04-30,2011-08-31,1,1,206033.9,175128.8,124384.1,1.000,219683.9,0.457016,-0.141053,
+History re-centred on BL expected returns,2015-16 China and oil sell-off,2015-04-30,2015-08-31,1,1,227946.8,193754.8,131558.6,1.000,170943.3,0.665112,-0.157654,
+History re-centred on BL expected returns,COVID,2019-10-31,2020-02-29,1,1,203858.3,173279.5,118975.3,1.000,169043.1,0.632945,-0.212827,
+History re-centred on BL expected returns,Worst path,2008-10-31,2009-02-28,1,1,129359.3,109955.4,74908.3,1.000,116905.5,0.963445,-0.123871,lowest January 2033 facility among the 184 paths
+History paths,2022 stock-and-bond sell-off,,2022-01-31,0,0,,,,,,,,no full six-year path: the last available start is 2020-07-31
+Simulated with 2022 spliced,"2022 sell-off, median",2021-09-30,2022-01-31,1,20000,207397.8,176288.2,125846.0,1.000,194263.7,0.147285,-0.183113,"15-month segment 2021-09-30..2022-12-31: months 3-14 replaced with the actual Jan-Dec 2022 equity, rate and FX moves; other simulated months unchanged"

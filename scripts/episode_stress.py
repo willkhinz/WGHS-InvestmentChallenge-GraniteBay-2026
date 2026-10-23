@@ -5,6 +5,7 @@ Writes reports/episode_stress.csv.
 """
 from __future__ import annotations
 
+import csv
 import dataclasses as dc
 from pathlib import Path
 
@@ -38,6 +39,11 @@ PATH_SETS = (
 START_OFFSET_MONTHS = engine.M_2027 + 2
 SPLICE_START = pd.Timestamp("2021-09-30")
 SPLICE_END = pd.Timestamp("2022-12-31")
+FIELDS = (
+    "path_set", "episode", "start", "first_bad_month", "available", "n_paths",
+    "facility_jan2033", "contribution_85", "floor_2033", "funded_share",
+    "facility_real_tw2027", "equity_cum_6y", "equity_worst_12m", "note",
+)
 
 
 def episode_start(first_bad_month: pd.Timestamp) -> pd.Timestamp:
@@ -135,6 +141,31 @@ def row(path_set_name, episode, start="", first_bad_month="", available=1, n_pat
     }
 
 
+def write_csv(rows):
+    OUT.mkdir(parents=True, exist_ok=True)
+    with CSV.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDS)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({
+                "path_set": r["path_set"],
+                "episode": r["episode"],
+                "start": r["start"],
+                "first_bad_month": r["first_bad_month"],
+                "available": int(r["available"]),
+                "n_paths": int(r["n_paths"]),
+                "facility_jan2033": f"{r['facility_jan2033']:.1f}" if "facility_jan2033" in r else "",
+                "contribution_85": f"{r['contribution_85']:.1f}" if "contribution_85" in r else "",
+                "floor_2033": f"{r['floor_2033']:.1f}" if "floor_2033" in r else "",
+                "funded_share": f"{r['funded_share']:.3f}" if "funded_share" in r else "",
+                "facility_real_tw2027": f"{r['facility_real_tw2027']:.1f}" if "facility_real_tw2027" in r else "",
+                "equity_cum_6y": f"{r['equity_cum_6y']:.6f}" if "equity_cum_6y" in r else "",
+                "equity_worst_12m": f"{r['equity_worst_12m']:.6f}" if "equity_worst_12m" in r else "",
+                "note": r["note"],
+            })
+    print(f"wrote {CSV}")
+
+
 def main():
     core, p, sc, st, cfg = build_inputs()
     w = np.asarray(core["w_bl"])
@@ -161,7 +192,9 @@ def main():
             rows.append(row(label, name, start=start.date().isoformat(),
                             first_bad_month=bad.date().isoformat(), **path_metrics(res, stats, i)))
         worst = int(np.argmin(res["facility"]))
+        worst_bad = starts[worst] + pd.offsets.MonthEnd(START_OFFSET_MONTHS)
         rows.append(row(label, "Worst path", start=starts[worst].date().isoformat(),
+                        first_bad_month=worst_bad.date().isoformat(),
                         **path_metrics(res, stats, worst),
                         note="lowest January 2033 facility among the 184 paths"))
     rows.append(row("History paths", "2022 stock-and-bond sell-off", first_bad_month="2022-01-31",
@@ -170,19 +203,26 @@ def main():
     spliced, _ = splice_2022(sc)
     spliced_res = engine.run(st, spliced, cfg)
     spliced_stats = equity_stats(weighted_log_eq(spliced, w))
-    rows.append(row("Simulated with 2022 spliced", "2022 sell-off, median", n_paths=N_SIM,
+    rows.append(row("Simulated with 2022 spliced", "2022 sell-off, median",
+                    start=SPLICE_START.date().isoformat(), first_bad_month="2022-01-31",
+                    n_paths=N_SIM,
                     **distribution_metrics(spliced_res, spliced_stats, 50),
-                    note="months 3-14 replaced with the actual Jan-Dec 2022 equity, rate and FX "
-                         "moves; other simulated months unchanged"))
+                    note="15-month segment 2021-09-30..2022-12-31: months 3-14 replaced with the "
+                         "actual Jan-Dec 2022 equity, rate and FX moves; other simulated months "
+                         "unchanged"))
 
     print(f"{'Path set':<45} {'Episode':<33} {'Start':<10} {'Facility':>10} {'Contrib':>10} "
           f"{'Floor':>10} {'Funded':>7} {'Real':>10} {'Equity':>8} {'Worst12':>8}")
+    def fmt(r, key, spec):
+        return format(r[key], spec) if key in r else "—"
+
     for r in rows:
         print(f"{r['path_set'][:44]:<45} {r['episode'][:32]:<33} {r['start']:<10} "
-              f"{r.get('facility_jan2033', 0):>10,.0f} {r.get('contribution_85', 0):>10,.0f} "
-              f"{r.get('floor_2033', 0):>10,.0f} {r.get('funded_share', 0):>6.0%} "
-              f"{r.get('facility_real_tw2027', 0):>10,.0f} {r.get('equity_cum_6y', 0):>+7.1%} "
-              f"{r.get('equity_worst_12m', 0):>+7.1%}")
+              f"{fmt(r, 'facility_jan2033', '>10,.0f')} {fmt(r, 'contribution_85', '>10,.0f')} "
+              f"{fmt(r, 'floor_2033', '>10,.0f')} {fmt(r, 'funded_share', '>6.0%')} "
+              f"{fmt(r, 'facility_real_tw2027', '>10,.0f')} {fmt(r, 'equity_cum_6y', '>+7.1%')} "
+              f"{fmt(r, 'equity_worst_12m', '>+7.1%')}")
+    write_csv(rows)
 
 
 if __name__ == "__main__":
