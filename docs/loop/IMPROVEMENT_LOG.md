@@ -433,3 +433,12 @@ factors are reported as invalid input data.
   input validation Codex had left uncommitted in `src/lgm/engine.py`, `src/lgm/strategies.py` and
   `tests/test_strategy_validation.py` (swept in by `git commit -a`). The code is tested; only the message
   undersells it. It was already pushed, so the history is left as is rather than rewritten.
+
+## Round 7: DeepSeek workers (2026-10-22 evening)
+
+- Tracking error corrected out of sample: 1.44-1.45% over three years, 1.57% over six, against 1.30%
+  as estimated (r7-te).
+- Refresh dry run (r7-refresh): all 57 sources downloaded; on the 2026-10-22 curve (5-year 4.94% ->
+  4.78%, 10-year 5.12% -> 4.96% since Oct 20) the IPS median would be $189.6k, 5th percentile
+  $140.1k, real median $160.3k; the WInS ladder top-up grows to about $298 of IBTO and $4 of IBTP;
+  not adopted, the committed numbers stay on the Oct 20 curve.

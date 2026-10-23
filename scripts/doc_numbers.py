@@ -433,6 +433,11 @@ def checks() -> list[tuple[str, str, str]]:
     out.append(("MODEL", "FX hedge frontier", hedge_sentence()))
     out.append(("MODEL", "Taiwan cost vs stocks", taiwan_equity_sentence()))
     out.append(("MODEL", "correlation shrinkage out of sample", corr_shrink_sentence()))
+    teo = pd.read_csv(R / "tracking_error_oos.csv").set_index(["funds", "horizon_m"])
+    out.append(("MODEL", "core tracking error out of sample",
+                f"the core's {rn['core']['tracking_error']:.2%} tracking error below is about "
+                f"{teo.loc[(9, 36), 'tracking_error_corrected']:.2%} over three years and "
+                f"{teo.loc[(9, 72), 'tracking_error_corrected']:.2%} over six"))
     ev = pd.read_csv(R / "equity_vol_history.csv").set_index("period").annual_vol
     out.append(("VALIDATION", "equity vol history",
                 f"volatility was {ev['2005-2026']:.1%} a year in 2005-2026, the window the equity volatilities come from, "

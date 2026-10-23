@@ -61,18 +61,18 @@ Shock correlations come from Aug 2017-Sep 2026 (the youngest fund's history), sh
 intensity (8%) toward zero, which lowers the average equity correlation from 0.69 to 0.64. Shrinking
 equity pairs toward their own average instead (constant-correlation target, Ledoit and Wolf 2004;
 `equity_shrink_target="mean"`) keeps the sample's 0.69. It was tried and rejected out of sample
-(`scripts/corr_shrink_oos.py`): re-estimated on rolling 109-month windows since 2005 and
-scored on the next three years, the zero target misjudged the market's volatility by +1.1% on average
-against +3.3% for the average target, and understated the core's active risk by 11% against 26%. It
-was closer on the market's volatility in all four tests (7 or 9 funds, 3 or 6 years), on active risk
-in all four, and its minimum-variance portfolio was calmer in all four. Correlations since 2005 have
-mostly been lower than in the window before, which favours the target that pulls them down; the
-evidence is about four independent periods. Both targets understate active risk, so the core's
-tracking error below is probably a tenth or more too low. Each
-fund's volatility comes from its own history since 2005; EMXC (from 2017) and MCHI (from 2011) would
-miss 2008, so their volatility is scaled by a longer-lived fund on the same market (EEM, FXI:
-full-window over same-window volatility), raising them from 19.3% to 23.1% and from 23.1% to 25.7%
-(`calibrate.VOL_PROXIES`).
+(`scripts/corr_shrink_oos.py`): re-estimated on rolling 109-month windows since 2005 and scored on the
+next three years, the zero target misjudged the market's volatility by +1.1% on average against +3.3% for
+the average target, and understated the core's active risk by 11% against 26%. It was closer on the
+market's volatility in all four tests (7 or 9 funds, 3 or 6 years), on active risk in all four, and its
+minimum-variance portfolio was calmer in all four. Correlations since 2005 have mostly been lower than in
+the window before, which favours the target that pulls them down; the evidence is about four independent
+periods. Both targets understate active risk: corrected for what this test found, the core's 1.30%
+tracking error below is about 1.45% over three years and 1.57% over six
+(`scripts/tracking_error_oos.py`). Each fund's volatility comes from its own history since 2005; EMXC
+(from 2017) and MCHI (from 2011) would miss 2008, so their volatility is scaled by a longer-lived fund on
+the same market (EEM, FXI: full-window over same-window volatility), raising them from 19.3% to 23.1% and
+from 23.1% to 25.7% (`calibrate.VOL_PROXIES`).
 
 Market inputs (all keyless):
 - **Expected rates: unchanged on average.** A 1994-2020 test (`scripts/rate_path_study.py`) forecast
