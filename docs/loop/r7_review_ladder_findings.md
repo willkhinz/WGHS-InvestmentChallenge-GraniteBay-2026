@@ -20,6 +20,11 @@ through the public API.
 | 3 | `src/lgm/instruments.py:161-164` | b | `TermFund.cashflows` guards on `settle` but values the flow at `curve.date`; with `settle = curve.date - 30 days` and `termination == curve.date` it returns `[(2026-10-20, 0.0)]` instead of `[]`, so `build_matrix` accepts a zero-value fund with price 1.0. The guard's stated purpose ("no future cash flows") is defeated by a mismatched settle/curve pair. | `finding_3_fund_settle_vs_curve_date` | Guard on `curve.date` (the valuation date), or derive both from one date. | hypothetical: every caller passes `settle = curve.date`. |
 | 4 | `src/lgm/ladder.py:243-254` | b | `premium` filters expired instruments but never checks that the first payment is still in the future. With a curve dated 2033-01-01 and `payment_schedule()` (first payment 2033-01-01, ten payments to 2042-01-01), all instrument flows are strictly after settlement, the LP is infeasible, and `premium` returns `nan` (cost `nan`) instead of raising. One year later the same call raises `ValueError` from `zero_coupon_cost`/`curve.df` ("discount maturity must contain finite nonnegative years"), so the failure mode changes type with the date. | `finding_4_premium_at_first_payment` | Require `payments[0][0] > curve.date` in `premium` (or `solve`) and raise `ValueError("first payment is due at settlement")`. | hypothetical now: `8075e26` dropped the 2033 fit from `scripts/ladder_premium.py` rather than fixing the library; no current caller passes such a curve. |
 
+## Planner decisions
+
+- Finding 1 (no change): at its maturity date the strip has no future cash flow (`cashflows()` returns `[]`), so a price of 0 is consistent with that.
+- Finding 2 (no change): at its termination date the fund has no future cash flow (`cashflows()` returns `[]`), so a growth factor of 0 is consistent with that.
+
 ## Hunks checked and found fine (category e)
 
 curve.py
