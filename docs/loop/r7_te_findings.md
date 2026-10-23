@@ -21,7 +21,7 @@ is the error the same out-of-sample test found in the market's volatility, not i
 shows what a volatility correction of that size would do, not a correction the core needs.
 
 The 1.30% should be quoted as a point estimate conditional on the generator's correlation estimate, with
-the out-of-sample correction alongside: about 1.4-1.45% if the relevant horizon is three years and 1.6%
-if it is six. The market-volatility correction moves the core's 15.18% volatility by less than 0.2
-percentage points in either direction, so the tracking-error correction, not a volatility rescaling, is
-the one that matters.
+the out-of-sample correction alongside: 1.44-1.45% if the relevant horizon is three years and 1.57% if
+it is six. The market-volatility correction leaves the core's 15.18% volatility essentially unchanged,
+between 15.01% and 15.24%, so the tracking-error correction, not a volatility rescaling, is the one that
+matters.
