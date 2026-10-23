@@ -295,3 +295,11 @@ def test_cov_list_of_lists_works_with_garch_and_correlation():
     p_corr = dc.replace(p_list_cov, tw_cost_corr=0.3, tw_cost_fx_corr=None, months=2)
     sc2 = simulate(p_corr, n=2, seed=0)
     assert sc2.tw_cost_log.shape == (2, 3)
+
+
+def test_tw_cost_state0_param_error_message():
+    """Regression: bad param-level tw_cost_state0 names the parameter, not start[...]."""
+    core = build_core()
+    p = esg_params(core["cal"], core["table"]["bl_geo_total"].values)
+    with pytest.raises(ValueError, match=r"^tw_cost_state0 must contain finite numeric values$"):
+        simulate(dc.replace(p, tw_cost_state0=(np.nan, 0.0), months=2), n=2, seed=0)

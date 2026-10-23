@@ -203,37 +203,39 @@ def _tw_cost_ar_coefficients(value):
     return phi1, phi2
 
 
-def _state_values(value, name: str) -> np.ndarray:
+def _state_values(value, name: str, label: str | None = None) -> np.ndarray:
     """Convert continuation state to finite numeric values, rejecting boolean pseudo-numbers."""
+    loc = label if label is not None else f"start[{name!r}]"
     try:
         raw = np.asarray(value, dtype=object)
         if any(isinstance(x, (bool, np.bool_)) for x in raw.flat):
             raise ValueError("boolean values are not valid state data")
         state = np.asarray(raw, dtype=float)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(f"start[{name!r}] must contain finite numeric values") from exc
+        raise ValueError(f"{loc} must contain finite numeric values") from exc
     if not np.isfinite(state).all():
-        raise ValueError(f"start[{name!r}] must contain finite numeric values")
+        raise ValueError(f"{loc} must contain finite numeric values")
     return state
 
 
-def _path_state(value, n: int, name: str) -> np.ndarray:
+def _path_state(value, n: int, name: str, label: str | None = None) -> np.ndarray:
     """Normalize a shared scalar or one finite value per scenario."""
-    state = _state_values(value, name)
+    state = _state_values(value, name, label)
     if state.ndim == 0:
         return np.full(n, float(state))
+    loc = label if label is not None else f"start[{name!r}]"
     if state.shape != (n,):
-        raise ValueError(f"start[{name!r}] must be a scalar or have shape ({n},), got {state.shape}")
+        raise ValueError(f"{loc} must be a scalar or have shape ({n},), got {state.shape}")
     return state
 
 
-def _tw_cost_state(value, n: int, name: str):
+def _tw_cost_state(value, n: int, name: str, label: str | None = None):
     """Normalize one lag state or the (two-lag) AR(2) state."""
     if value is None:
         return None
     if isinstance(value, (tuple, list)) and len(value) == 2:
-        return tuple(_path_state(item, n, name) for item in value)
-    return _path_state(value, n, name)
+        return tuple(_path_state(item, n, name, label) for item in value)
+    return _path_state(value, n, name, label)
 
 
 def _parameter_values(value, shape: tuple, name: str) -> np.ndarray:
@@ -434,7 +436,7 @@ def simulate(p: ESGParams, n: int, seed: int = 0, antithetic: bool = True,
     if tw_cost_ar is not None and start is None:
         raw_cost_state = p.tw_cost_state0 if p.tw_cost_state0 is not None else p.tw_cost_infl0
         name = "tw_cost_state0" if p.tw_cost_state0 is not None else "tw_cost_infl0"
-        tw_cost_initial_state = _tw_cost_state(raw_cost_state, n, name)
+        tw_cost_initial_state = _tw_cost_state(raw_cost_state, n, name, label=name)
     if garch is not None and start is not None and "garch_h" in start:
         try:
             start_h = _state_values(start["garch_h"], "garch_h")
