@@ -63,23 +63,95 @@ def path_set(recentre: bool, core):
     return history_paths([g.history for g in CORE], recentre=target)
 
 
+def weighted_log_eq(sc, w):
+    """Core-weighted log equity return in each month of the six-year investment window."""
+    return (sc.eq_log[:, engine.M_2027:engine.M_2033, :] * w).sum(2)
+
+
+def equity_stats(log_eq):
+    """Cumulative return and worst 12 months over Jan 2027-Dec 2032, per path."""
+    cum = np.cumsum(log_eq, axis=1)
+    rolling = cum[:, 11:] - np.concatenate([np.zeros((len(cum), 1)), cum[:, :-12]], axis=1)
+    return np.expm1(cum[:, -1]), np.expm1(rolling.min(axis=1))
+
+
+def path_metrics(res, stats, i):
+    cum, worst = stats
+    return {
+        "facility_jan2033": float(res["facility"][i]),
+        "contribution_85": float(res["contribution"][i]),
+        "floor_2033": float(res["floor_2033"][i]),
+        "funded_share": float(res["funded"][i]),
+        "facility_real_tw2027": float(res["facility_real_tw2027"][i]),
+        "equity_cum_6y": float(cum[i]),
+        "equity_worst_12m": float(worst[i]),
+    }
+
+
+def distribution_metrics(res, stats, q):
+    cum, worst = stats
+    return {
+        "facility_jan2033": float(np.percentile(res["facility"], q)),
+        "contribution_85": float(np.percentile(res["contribution"], q)),
+        "floor_2033": float(np.percentile(res["floor_2033"], q)),
+        "funded_share": float(res["funded"].mean()),
+        "facility_real_tw2027": float(np.percentile(res["facility_real_tw2027"], q)),
+        "equity_cum_6y": float(np.percentile(cum, q)),
+        "equity_worst_12m": float(np.percentile(worst, q)),
+    }
+
+
+def row(path_set_name, episode, start="", first_bad_month="", available=1, n_paths=1, note="", **metrics):
+    return {
+        "path_set": path_set_name,
+        "episode": episode,
+        "start": start,
+        "first_bad_month": first_bad_month,
+        "available": available,
+        "n_paths": n_paths,
+        **metrics,
+        "note": note,
+    }
+
+
 def main():
     core, p, sc, st, cfg = build_inputs()
+    w = np.asarray(core["w_bl"])
+    sim_res = engine.run(st, sc, cfg)
+    sim_stats = equity_stats(weighted_log_eq(sc, w))
+    rows = [
+        row("Simulated (20,000, seed 11)", "Median", n_paths=N_SIM,
+            **distribution_metrics(sim_res, sim_stats, 50)),
+        row("Simulated (20,000, seed 11)", "5th percentile", n_paths=N_SIM,
+            **distribution_metrics(sim_res, sim_stats, 5)),
+    ]
     for label, recentre in PATH_SETS:
         hsc, starts = path_set(recentre, core)
         res = engine.run(st, hsc, cfg)
-        print(f"{label}: {len(starts)} paths, {starts[0].date()} to {starts[-1].date()}")
+        stats = equity_stats(weighted_log_eq(hsc, w))
         for name, bad in EPISODES:
             start = episode_start(bad)
             if start not in starts:
-                print(f"  {name}: start {start.date()} NOT AVAILABLE")
+                rows.append(row(label, name, start=start.date().isoformat(),
+                                first_bad_month=bad.date().isoformat(), available=0, n_paths=0,
+                                note="start not available in this path set"))
                 continue
             i = starts.index(start)
-            print(f"  {name}: start {start.date()}, first bad month {bad.date()}, "
-                  f"January 2033 facility ${res['facility'][i]:,.0f}")
+            rows.append(row(label, name, start=start.date().isoformat(),
+                            first_bad_month=bad.date().isoformat(), **path_metrics(res, stats, i)))
         worst = int(np.argmin(res["facility"]))
-        print(f"  worst path: start {starts[worst].date()}, January 2033 facility "
-              f"${res['facility'][worst]:,.0f}")
+        rows.append(row(label, "Worst path", start=starts[worst].date().isoformat(),
+                        **path_metrics(res, stats, worst),
+                        note="lowest January 2033 facility among the 184 paths"))
+
+    print(f"{'Path set':<45} {'Episode':<33} {'Start':<10} {'Facility':>10} {'Contrib':>10} "
+          f"{'Floor':>10} {'Funded':>7} {'Real':>10} {'Equity':>8} {'Worst12':>8}")
+    for r in rows:
+        print(f"{r['path_set'][:44]:<45} {r['episode'][:32]:<33} {r['start']:<10} "
+              f"{r.get('facility_jan2033', 0):>10,.0f} {r.get('contribution_85', 0):>10,.0f} "
+              f"{r.get('floor_2033', 0):>10,.0f} {r.get('funded_share', 0):>6.0%} "
+              f"{r.get('facility_real_tw2027', 0):>10,.0f} {r.get('equity_cum_6y', 0):>+7.1%} "
+              f"{r.get('equity_worst_12m', 0):>+7.1%}")
 
 
 if __name__ == "__main__":
