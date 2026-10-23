@@ -442,3 +442,15 @@ factors are reported as invalid input data.
   4.78%, 10-year 5.12% -> 4.96% since Oct 20) the IPS median would be $189.6k, 5th percentile
   $140.1k, real median $160.3k; the WInS ladder top-up grows to about $298 of IBTO and $4 of IBTP;
   not adopted, the committed numbers stay on the Oct 20 curve.
+
+- Scripts outside run_all (r7-scripts): all ten run after the day's input validation, which rejected
+  none of their inputs. Two stale scripts fixed: taiwan_variants.py (its config template lacked
+  usd_twd_innovation_corr) and taiwan_costs.py, which would have overwritten the live
+  config/taiwan.yaml with its round-1 schema and now writes config/taiwan_costs_proposal.yaml.
+  Independently verified (r7-verify-scripts).
+- Review of the validation in curve.py, ladder.py and instruments.py (r7-review-ladder): four edge
+  cases at maturity dates, none hit by a current caller. Fixed: a term fund's cash-flow cut-off now
+  uses the later of settlement and curve date, and ladder.premium raises a clear error when the
+  curve date is on or after the first payment (it returned NaN). Left as designed: a STRIP or fund
+  on its maturity date has no cash flow, so a price of 0 is consistent. Independently verified
+  (r7-verify-ladder).
