@@ -55,7 +55,7 @@ def finding_3_fund_settle_vs_curve_date() -> None:
     flows, price, _, _ = L._flows(fund, zc, settle)
     print(
         "finding_3_fund_settle_vs_curve_date: "
-        f"expected [] (termination {fund.termination} <= curve date {zc.date}), actual={flows}; "
+        f"expected [] (termination {fund.termination} <= curve date {zc.date}, settle {settle}), actual={flows}; "
         f"build_matrix price={price:.6f}"
     )
 
